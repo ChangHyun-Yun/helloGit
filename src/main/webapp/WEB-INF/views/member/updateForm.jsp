@@ -17,7 +17,10 @@
 		<td><input type="text" name="id" value="${myInfo.id}" readonly="readonly"></td>
 	</tr>
 	<tr height="40"><td bgcolor="aqua">Password</td>
-		<td><input type="password" name="password" value="${myInfo.password}"></td>
+	
+	<!-- password 암호화 이후 password 값 출력하지 않음  -->
+		<td><input type="password" name="password" value=""></td>
+		
 	</tr>
 	<tr height="40"><td bgcolor="aqua">Name</td>
 		<td><input type="text" name="name" value="${myInfo.name}"></td>

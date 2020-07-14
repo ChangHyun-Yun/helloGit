@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,9 +25,33 @@ public class MemberController {
 	@Autowired
 	MService service;
 	// MService service=new MServiceImpl();
+	@Autowired
+	BCryptPasswordEncoder passwordEncoder;
 	
 // ** New 기능 추가   *****************************	
-
+	
+// ** 스프링 시큐리티  BCryptTest 
+// => 다이제스트 생성  : encode
+// => 다이제스트와 원본 비교  : matches
+//			passwordEncoder.matches(사용자가 입력한 password,  암호화된 password)
+	
+	@RequestMapping(value = "/bcrypt")
+	public ModelAndView bcrypt(ModelAndView mv, MemberVO vo) {
+		
+		String password ="12345!" ;
+		// 동일 원본에 대해 다른 다이제스트가 생성됨
+		String password1 = passwordEncoder.encode(password) ;
+		String password2 = passwordEncoder.encode(password) ;
+		// 원본과 비교 가능
+		System.out.println("password1 =>"+password1);
+		System.out.println("password1 maches =>"+passwordEncoder.matches(password, password1)); // T
+		System.out.println("password2 =>"+password2);
+		System.out.println("password2 maches =>"+passwordEncoder.matches(password, password2)); // T 
+		System.out.println("password1 equals password2 =>"+password1.equals(password2));  // F
+		mv.setViewName("home");
+		return mv;
+	}// bcrypt
+	
 // ** JSON : 제이슨, JavaScript Object Notation
 	//        자바스크립트의 객체 표기법으로, 데이터를 전달 할 때 사용하는 표준형식.
 	//        속성(key) 과 값(value) 이 하나의 쌍을 이룸
@@ -247,12 +272,17 @@ public class MemberController {
 	@RequestMapping(value = "/login")
 	public ModelAndView login(HttpServletRequest request, ModelAndView mv, MemberVO vo) {
 
-		String password = vo.getPassword();
+		String password = vo.getPassword();  // 입력값
 		mv.setViewName("login/loginForm");
 
 		vo = service.selectOne(vo);
 		if (vo != null) { // id 존재
-			if (vo.getPassword().equals(password)) {
+			// password 비교
+			// 암호화 적용 전 :  if (vo.getPassword().equals(password)) {
+			
+			// 암호화 적용 후
+			// password:입력값, vo.getPassword(): Table에 저장된 값
+			if (passwordEncoder.matches(password, vo.getPassword())) {
 				// 로그인 성공 -> login 정보 보관 (id, name을 session에) -> loginSuccess
 				request.getSession().setAttribute("logID", vo.getId());
 				request.getSession().setAttribute("logName", vo.getName());
@@ -299,6 +329,9 @@ public class MemberController {
 		// => request.getParameter("code") 가 U 인지 확인
 		mv.setViewName("member/memberDetail");
 		if ("U".equals(request.getParameter("code"))) {
+			// password 암호화 이후 password 값 session 에 보관
+			session.setAttribute("encodedPassword", vo.getPassword());
+			
 			// 내정보 수정화면으로
 			mv.setViewName("member/updateForm");
 		} else if ("E".equals(request.getParameter("code"))) { // 내정보 수정에서 오류 상황
@@ -359,8 +392,11 @@ public class MemberController {
 		//			-> RollBack 됨으로 둘다 insert 안됨. (500)
 		// 			-> 500 은 Exception 처리 해주면 RollBack 확인 가능 
 		// insert1 : 
-		service.insert(vo);
+		// service.insert(vo);
 		// insert2
+		
+		// Passsword 암호화
+		vo.setPassword(passwordEncoder.encode(vo.getPassword()));                        
 		if (service.insert(vo) > 0) {
 			// Join 성공
 			mv.addObject("joinID", vo.getId());
@@ -375,6 +411,7 @@ public class MemberController {
 	@RequestMapping(value = "/mupdate")
 	public ModelAndView update(HttpServletRequest request, ModelAndView mv, MemberVO vo)
 				throws IOException {
+		System.out.println("vo null Test=>"+vo);
 		// Image 처리
 		// 1. uploadfilef 처리 
 		// 2. New Image 선택여부
@@ -395,6 +432,14 @@ public class MemberController {
 			file2="resources/uploadImage/"+uploadfilef.getOriginalFilename();
 			vo.setUploadfile(file2);
 		} // !uploadfilef.isEmpty()
+		
+		// password 입력값  확인 및 암호와 처리
+		if (vo.getPassword().length() > 3 && vo.getPassword()!=null) {
+				// new password 를 encode
+			vo.setPassword( passwordEncoder.encode(vo.getPassword()));
+		}else {	// session에 보관해 놓은 password 사용
+			vo.setPassword((String)request.getSession().getAttribute("encodedPassword"));
+		}
 		
 		if (service.update(vo) > 0) {
 			// 회원수정 성공 -> memberList 출력

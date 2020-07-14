@@ -53,7 +53,9 @@
 	<a href="listcri">BCri</a><br>
 	<!-- <a href="board/listcri">BCri</a><br><br> -->
 	<a href="atestf">AjaxTest</a>&nbsp;
-	<a href="etest">ExceptionTest</a>&nbsp;
+	<a href="etest">Exception</a>&nbsp;
+	<a href="votest?id=votest&name=가나다라">VoTest</a>&nbsp;
+	<a href="bcrypt">BCryptTest</a><br>
 	<a href="sngreen">성남그린</a>&nbsp;
 	<a href="allgreen">그린</a>&nbsp;
 	<a href="jeju">제주</a><br><br>

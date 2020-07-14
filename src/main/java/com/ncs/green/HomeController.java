@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
+import vo.MemberVO;
+
 //** 스프링MVC 2단계 : 스프링 DispatcherServlet 사용II 
 //=> Ano 기반 , MemberService 적용 
 
@@ -73,8 +75,15 @@ public class HomeController {
 	
 	private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
 	
-// ** Exception Test ****************************
+
+// ** VoTest
+	@RequestMapping(value = "/votest")
+	public ModelAndView votest(ModelAndView mv, MemberVO vo) {
+		mv.setViewName("ajaxTest/voTest");
+		return mv;
+	}// votest
 	
+// ** Exception Test ****************************
 	// Exception
 	@RequestMapping(value = "/etest")
 	public ModelAndView etest(ModelAndView mv) {
